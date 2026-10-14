@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Minecraft Helper</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.josh.minecraft-helper</string>
+	<string>dev.joshrad.minecraft-helper</string>
 	<key>CFBundleExecutable</key>
 	<string>MinecraftHelper</string>
 	<key>CFBundleVersion</key>
