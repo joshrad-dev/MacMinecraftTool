@@ -23,6 +23,19 @@ modifier flags carried on *mouse* events are changed.
 open "build/Minecraft Helper.app"
 ```
 
+The app icon's editable artwork is `Resources/AppIcon.svg`. Its native
+Icon Composer document is `Resources/AppIcon.icon`, with an ivory default
+background and a system-dark background. Builds require Xcode 26 or later;
+`actool` packages the appearance variants in `Assets.car` and generates an
+`.icns` fallback for older macOS versions. No runtime icon switching is needed.
+On macOS 26 or later, the icon follows the user's icon appearance selection.
+
+After editing the SVG, run `python3 Scripts/prepare-icon.py` to update the
+Icon Composer artwork, then rebuild. Open `Resources/AppIcon.icon` in Icon
+Composer to edit its appearance settings. `bash Scripts/build-icon.sh`
+also regenerates a standalone legacy icon and PNG preview (requires
+`brew install librsvg`).
+
 Permissions, per override:
 
 - **Ctrl-click / Shift-scroll / Ctrl+Q** — need **Accessibility** access (System
