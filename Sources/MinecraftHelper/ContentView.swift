@@ -6,7 +6,7 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Minecraft Helper")
+                Text("MacMinecraftTool")
                     .font(.title2.bold())
                 Text("Flip these on when you're playing, off when you're done.")
                     .font(.callout)
@@ -83,7 +83,7 @@ struct ContentView: View {
                     caption: "If no Minecraft (Java) process has been running for a minute, sends a notification offering to quit the app."
                 )
                 if model.notificationsDenied {
-                    Label("Notifications are off for Minecraft Helper — allow them in System Settings → Notifications.",
+                    Label("Notifications are off for MacMinecraftTool — allow them in System Settings → Notifications.",
                           systemImage: "bell.slash.fill")
                         .font(.caption)
                         .foregroundStyle(.red)

@@ -1,0 +1,62 @@
+name: MinecraftHelper
+options:
+  minimumXcodeGenVersion: 2.46.0
+  xcodeVersion: "26.0"
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+fileGroups:
+  - README.md
+  - DEVELOPMENT.md
+  - Package.swift
+  - project.yml
+  - Scripts
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_APP_SANDBOX: NO
+  configs:
+    Release:
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+      ONLY_ACTIVE_ARCH: NO
+targets:
+  MinecraftHelper:
+    productName: MacMinecraftTool
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/MinecraftHelper
+      - path: Resources/AppIcon.icon
+        buildPhase: resources
+      - path: Resources/Info.plist
+        buildPhase: none
+    settings:
+      base:
+        DEVELOPMENT_TEAM: RCP44SHT3W
+        INFOPLIST_KEY_CFBundleDisplayName: MacMinecraftTool
+        PRODUCT_NAME: MacMinecraftTool
+        EXECUTABLE_NAME: MinecraftHelper
+        PRODUCT_BUNDLE_IDENTIFIER: dev.joshrad.minecraft-helper
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES
+schemes:
+  MinecraftHelper:
+    build:
+      targets:
+        MinecraftHelper: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: true

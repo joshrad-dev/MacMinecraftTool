@@ -7,7 +7,7 @@ struct MinecraftHelperApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        WindowGroup("Minecraft Helper") {
+        WindowGroup("MacMinecraftTool") {
             ContentView()
                 .environmentObject(OverridesModel.shared)
         }

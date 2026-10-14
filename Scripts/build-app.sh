@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds MinecraftHelper and assembles a runnable "Minecraft Helper.app".
+# Builds MinecraftHelper and assembles a runnable "MacMinecraftTool.app".
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -16,7 +16,7 @@ xcrun actool Resources/AppIcon.icon \
     --output-partial-info-plist build/NativeIcon/Info.plist \
     --output-format human-readable-text
 
-APP="build/Minecraft Helper.app"
+APP="build/MacMinecraftTool.app"
 if [ -d "$APP" ]; then
     trash "$APP"
 fi

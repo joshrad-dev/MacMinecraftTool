@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <title>Minecraft Helper</title>
+  <title>MacMinecraftTool</title>
   <desc>A pixel-textured grass block above an enabled Mac-style switch on a warm ivory app tile.</desc>
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="0.85" y2="1"><stop stop-color="#fffef6"/><stop offset="1" stop-color="#e8e9dc"/></linearGradient>

@@ -1,2 +1,8 @@
 .build
 build/
+
+# Xcode user settings and local build output
+DerivedData/
+*.xcarchive/
+xcuserdata/
+*.xcuserstate

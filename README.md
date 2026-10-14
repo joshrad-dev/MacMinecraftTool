@@ -1,4 +1,4 @@
-# Minecraft Helper
+# MacMinecraftTool
 
 A Mac app that fixes a lot of the annoyances when playing Minecraft on a Mac. Open this app before starting Minecraft and quit it when you're done.
 

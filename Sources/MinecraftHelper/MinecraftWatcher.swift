@@ -103,7 +103,7 @@ final class MinecraftWatcher {
 
     private func postQuitNotification() {
         let content = UNMutableNotificationContent()
-        content.title = "Minecraft Helper"
+        content.title = "MacMinecraftTool"
         content.body = "It seems like you're not playing Minecraft anymore, want to quit?"
         content.categoryIdentifier = Self.categoryID
         content.sound = .default

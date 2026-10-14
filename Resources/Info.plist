@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>Minecraft Helper</string>
+	<string>MacMinecraftTool</string>
 	<key>CFBundleDisplayName</key>
-	<string>Minecraft Helper</string>
+	<string>MacMinecraftTool</string>
 	<key>CFBundleIdentifier</key>
 	<string>dev.joshrad.minecraft-helper</string>
 	<key>CFBundleExecutable</key>
