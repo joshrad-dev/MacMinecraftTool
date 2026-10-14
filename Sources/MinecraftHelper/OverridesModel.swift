@@ -9,7 +9,14 @@ final class OverridesModel: ObservableObject {
     @Published var ctrlClickOverride: Bool {
         didSet {
             defaults.set(ctrlClickOverride, forKey: Keys.ctrlClick)
-            applyMouseOverrides()
+            applyEventTapOverrides()
+        }
+    }
+
+    @Published var dropStackOverride: Bool {
+        didSet {
+            defaults.set(dropStackOverride, forKey: Keys.dropStack)
+            applyEventTapOverrides()
         }
     }
 
@@ -23,7 +30,7 @@ final class OverridesModel: ObservableObject {
     @Published var shiftScrollOverride: Bool {
         didSet {
             defaults.set(shiftScrollOverride, forKey: Keys.shiftScroll)
-            applyMouseOverrides()
+            applyEventTapOverrides()
         }
     }
 
@@ -31,13 +38,6 @@ final class OverridesModel: ObservableObject {
         didSet {
             defaults.set(pointerAccelOverride, forKey: Keys.pointerAccel)
             applyPointerAccelOverride(enabled: pointerAccelOverride)
-        }
-    }
-
-    @Published var shakeOverride: Bool {
-        didSet {
-            defaults.set(shakeOverride, forKey: Keys.shake)
-            applyShakeOverride(enabled: shakeOverride)
         }
     }
 
@@ -54,6 +54,10 @@ final class OverridesModel: ObservableObject {
         didSet { defaults.set(ctrlClickIncluded, forKey: Keys.ctrlClickIncluded) }
     }
 
+    @Published var dropStackIncluded: Bool {
+        didSet { defaults.set(dropStackIncluded, forKey: Keys.dropStackIncluded) }
+    }
+
     @Published var functionKeysIncluded: Bool {
         didSet { defaults.set(functionKeysIncluded, forKey: Keys.fnKeysIncluded) }
     }
@@ -66,10 +70,6 @@ final class OverridesModel: ObservableObject {
         didSet { defaults.set(pointerAccelIncluded, forKey: Keys.pointerAccelIncluded) }
     }
 
-    @Published var shakeIncluded: Bool {
-        didSet { defaults.set(shakeIncluded, forKey: Keys.shakeIncluded) }
-    }
-
     @Published var quitReminderIncluded: Bool {
         didSet { defaults.set(quitReminderIncluded, forKey: Keys.quitReminderIncluded) }
     }
@@ -79,10 +79,10 @@ final class OverridesModel: ObservableObject {
     @Published var masterSwitch = false {
         didSet {
             if ctrlClickIncluded { ctrlClickOverride = masterSwitch }
+            if dropStackIncluded { dropStackOverride = masterSwitch }
             if functionKeysIncluded { functionKeysOverride = masterSwitch }
             if shiftScrollIncluded { shiftScrollOverride = masterSwitch }
             if pointerAccelIncluded { pointerAccelOverride = masterSwitch }
-            if shakeIncluded { shakeOverride = masterSwitch }
             if quitReminderIncluded { quitReminderEnabled = masterSwitch }
         }
     }
@@ -90,7 +90,6 @@ final class OverridesModel: ObservableObject {
     @Published private(set) var accessibilityGranted: Bool
     @Published private(set) var functionKeyError: String?
     @Published private(set) var pointerAccelError: String?
-    @Published private(set) var shakeNeedsFullDiskAccess = false
     @Published private(set) var notificationsDenied = false
 
     private let defaults = UserDefaults.standard
@@ -103,59 +102,64 @@ final class OverridesModel: ObservableObject {
     /// while already on (e.g. the master switch reasserting `true`), which
     /// would read back our own override as if it were the user's original
     /// preference and clobber the real saved value.
-    private var functionKeyOverrideIsActive = false
-
-    /// Same guard pattern as `functionKeyOverrideIsActive`, for the shake
-    /// override: prevents re-capturing `Keys.savedShakeValue` while the
-    /// override is already holding the setting.
-    private var shakeOverrideIsActive = false
+    ///
+    /// Mirrored into defaults so a run that ends without
+    /// `prepareForTermination()` can be cleaned up at the next launch.
+    private var functionKeyOverrideIsActive = false {
+        didSet { defaults.set(functionKeyOverrideIsActive, forKey: Keys.fnKeysActive) }
+    }
 
     private enum Keys {
         static let ctrlClick = "override.ctrlClick"
+        static let dropStack = "override.dropStack"
         static let fnKeys = "override.fnKeys"
         static let shiftScroll = "override.shiftScroll"
         static let pointerAccel = "override.pointerAccel"
-        static let shake = "override.shake"
         static let quitReminder = "override.quitReminder"
         static let savedFnMode = "override.fnKeys.savedMode"
-        static let savedShakeValue = "override.shake.savedValue"
+        static let fnKeysActive = "override.fnKeys.active"
         static let ctrlClickIncluded = "override.ctrlClick.included"
+        static let dropStackIncluded = "override.dropStack.included"
         static let fnKeysIncluded = "override.fnKeys.included"
         static let shiftScrollIncluded = "override.shiftScroll.included"
         static let pointerAccelIncluded = "override.pointerAccel.included"
-        static let shakeIncluded = "override.shake.included"
         static let quitReminderIncluded = "override.quitReminder.included"
     }
 
     private init() {
         ctrlClickOverride = defaults.bool(forKey: Keys.ctrlClick)
+        dropStackOverride = defaults.bool(forKey: Keys.dropStack)
         functionKeysOverride = defaults.bool(forKey: Keys.fnKeys)
         shiftScrollOverride = defaults.bool(forKey: Keys.shiftScroll)
         pointerAccelOverride = defaults.bool(forKey: Keys.pointerAccel)
-        shakeOverride = defaults.bool(forKey: Keys.shake)
         quitReminderEnabled = defaults.bool(forKey: Keys.quitReminder)
         ctrlClickIncluded = defaults.object(forKey: Keys.ctrlClickIncluded) == nil
             ? true : defaults.bool(forKey: Keys.ctrlClickIncluded)
+        dropStackIncluded = defaults.object(forKey: Keys.dropStackIncluded) == nil
+            ? true : defaults.bool(forKey: Keys.dropStackIncluded)
         functionKeysIncluded = defaults.object(forKey: Keys.fnKeysIncluded) == nil
             ? true : defaults.bool(forKey: Keys.fnKeysIncluded)
         shiftScrollIncluded = defaults.object(forKey: Keys.shiftScrollIncluded) == nil
             ? true : defaults.bool(forKey: Keys.shiftScrollIncluded)
         pointerAccelIncluded = defaults.object(forKey: Keys.pointerAccelIncluded) == nil
             ? true : defaults.bool(forKey: Keys.pointerAccelIncluded)
-        shakeIncluded = defaults.object(forKey: Keys.shakeIncluded) == nil
-            ? true : defaults.bool(forKey: Keys.shakeIncluded)
         quitReminderIncluded = defaults.object(forKey: Keys.quitReminderIncluded) == nil
             ? true : defaults.bool(forKey: Keys.quitReminderIncluded)
         accessibilityGranted = AXIsProcessTrusted()
     }
 
     var needsAccessibility: Bool {
-        (ctrlClickOverride || shiftScrollOverride) && !accessibilityGranted
+        usesEventTap && !accessibilityGranted
+    }
+
+    private var usesEventTap: Bool {
+        ctrlClickOverride || shiftScrollOverride || dropStackOverride
     }
 
     /// Called once at launch to re-apply whatever was on last time.
     func applyPersistedState() {
-        applyMouseOverrides()
+        recoverFromUnrestoredSession()
+        applyEventTapOverrides()
         if functionKeysOverride {
             // Re-assert standard fn keys; the saved pre-override mode from
             // the original enable is still in defaults, so don't overwrite it.
@@ -172,12 +176,23 @@ final class OverridesModel: ObservableObject {
                 pointerAccelError = "Couldn't change pointer acceleration."
             }
         }
-        if shakeOverride {
-            shakeNeedsFullDiskAccess = !ShakeToLocateManager.setShakeDisabled(true)
-            shakeOverrideIsActive = !shakeNeedsFullDiskAccess
-        }
         if quitReminderEnabled {
             applyQuitReminder(enabled: true)
+        }
+    }
+
+    /// The fn-key mode and pointer acceleration are both system-wide settings
+    /// that outlive the process, so they're only undone by
+    /// `prepareForTermination()`. If the app died before that ran (crash,
+    /// force quit), the override is still applied to the system while its
+    /// switch is off — put it back before applying this launch's state.
+    private func recoverFromUnrestoredSession() {
+        if !functionKeysOverride, defaults.bool(forKey: Keys.fnKeysActive) {
+            restoreSavedFunctionKeyMode()
+            defaults.set(false, forKey: Keys.fnKeysActive)
+        }
+        if !pointerAccelOverride {
+            PointerAccelerationManager.shared.restoreIfLeftActive()
         }
     }
 
@@ -188,13 +203,10 @@ final class OverridesModel: ObservableObject {
             functionKeyOverrideIsActive = false
         }
         PointerAccelerationManager.shared.deactivate()
-        if shakeOverrideIsActive {
-            restoreSavedShakeValue()
-            shakeOverrideIsActive = false
-        }
         MinecraftWatcher.shared.stop()
         EventTapManager.shared.stripCtrlFromClicks = false
         EventTapManager.shared.stripShiftFromScroll = false
+        EventTapManager.shared.ctrlQDropsStack = false
     }
 
     func promptForAccessibility() {
@@ -203,9 +215,9 @@ final class OverridesModel: ObservableObject {
         hasPromptedForAccessibility = true
     }
 
-    // MARK: - Mouse overrides (need Accessibility)
+    // MARK: - Event tap overrides (need Accessibility)
 
-    private func applyMouseOverrides() {
+    private func applyEventTapOverrides() {
         accessibilityGranted = AXIsProcessTrusted()
 
         if needsAccessibility {
@@ -218,9 +230,10 @@ final class OverridesModel: ObservableObject {
         let manager = EventTapManager.shared
         manager.stripCtrlFromClicks = ctrlClickOverride && accessibilityGranted
         manager.stripShiftFromScroll = shiftScrollOverride && accessibilityGranted
+        manager.ctrlQDropsStack = dropStackOverride && accessibilityGranted
     }
 
-    /// While a mouse override is switched on but permission hasn't been
+    /// While an event tap override is switched on but permission hasn't been
     /// granted yet, poll so the tap starts the moment the user grants it.
     private func startPollingForPermission() {
         guard permissionPollTimer == nil else { return }
@@ -228,12 +241,12 @@ final class OverridesModel: ObservableObject {
             Task { @MainActor in
                 let model = OverridesModel.shared
                 model.accessibilityGranted = AXIsProcessTrusted()
-                guard model.accessibilityGranted || !(model.ctrlClickOverride || model.shiftScrollOverride) else {
+                guard model.accessibilityGranted || !model.usesEventTap else {
                     return
                 }
                 model.permissionPollTimer?.invalidate()
                 model.permissionPollTimer = nil
-                model.applyMouseOverrides()
+                model.applyEventTapOverrides()
             }
         }
     }
@@ -275,35 +288,6 @@ final class OverridesModel: ObservableObject {
         } else {
             PointerAccelerationManager.shared.deactivate()
         }
-    }
-
-    // MARK: - Shake to locate (needs Full Disk Access)
-
-    private func applyShakeOverride(enabled: Bool) {
-        if enabled {
-            guard !shakeOverrideIsActive else { return }
-            // Remember what the user had before so toggling off restores it.
-            let previous = ShakeToLocateManager.currentValue()
-            defaults.set(previous.rawValue, forKey: Keys.savedShakeValue)
-            if ShakeToLocateManager.setShakeDisabled(true) {
-                shakeNeedsFullDiskAccess = false
-                shakeOverrideIsActive = true
-            } else {
-                shakeNeedsFullDiskAccess = true
-            }
-        } else {
-            shakeNeedsFullDiskAccess = false
-            if shakeOverrideIsActive {
-                restoreSavedShakeValue()
-                shakeOverrideIsActive = false
-            }
-        }
-    }
-
-    private func restoreSavedShakeValue() {
-        let raw = defaults.object(forKey: Keys.savedShakeValue) as? Int ?? -1
-        let saved = ShakeToLocateManager.SavedValue(rawValue: raw) ?? .absent
-        ShakeToLocateManager.restore(saved)
     }
 
     // MARK: - Quit reminder

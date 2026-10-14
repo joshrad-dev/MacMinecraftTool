@@ -18,7 +18,7 @@ final class MinecraftWatcher {
     private static let absenceThreshold: TimeInterval = 60
     /// Requires "java" in the command line so the app itself (whose path
     /// contains "minecraft") never matches its own process.
-    private static let processPattern = "java.*minecraft|minecraft.*java"
+    nonisolated static let processPattern = "java.*minecraft|minecraft.*java"
 
     private var timer: Timer?
     private var absenceStart: Date?

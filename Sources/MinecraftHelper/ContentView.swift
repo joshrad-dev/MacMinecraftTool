@@ -39,6 +39,13 @@ struct ContentView: View {
                 )
                 Divider()
                 overrideRow(
+                    included: $model.dropStackIncluded,
+                    isOn: $model.dropStackOverride,
+                    title: "Ctrl + Q drops a whole stack",
+                    caption: "Minecraft on Mac expects ⌘Q for this, which quits the game. While Minecraft is in front, Ctrl + Q is passed to the game as ⌘ + Q without triggering Quit."
+                )
+                Divider()
+                overrideRow(
                     included: $model.functionKeysIncluded,
                     isOn: $model.functionKeysOverride,
                     title: "F1–F12 act as standard function keys",
@@ -70,13 +77,6 @@ struct ContentView: View {
                 }
                 Divider()
                 overrideRow(
-                    included: $model.shakeIncluded,
-                    isOn: $model.shakeOverride,
-                    title: "Shake-to-locate cursor off",
-                    caption: "Stops the cursor from ballooning when you whip the mouse around in a fight."
-                )
-                Divider()
-                overrideRow(
                     included: $model.quitReminderIncluded,
                     isOn: $model.quitReminderEnabled,
                     title: "Remind me to quit",
@@ -94,10 +94,6 @@ struct ContentView: View {
 
             if model.needsAccessibility {
                 accessibilityBanner
-            }
-
-            if model.shakeNeedsFullDiskAccess {
-                fullDiskAccessBanner
             }
         }
         .padding(20)
@@ -128,32 +124,12 @@ struct ContentView: View {
         }
     }
 
-    private var fullDiskAccessBanner: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "externaldrive.fill.badge.exclamationmark")
-                .foregroundStyle(.orange)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Changing the shake-to-locate setting needs Full Disk Access (macOS protects Accessibility preferences). Grant it, then flip the switch again.")
-                    .font(.caption)
-                    .fixedSize(horizontal: false, vertical: true)
-                Button("Open Full Disk Access Settings") {
-                    let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!
-                    NSWorkspace.shared.open(url)
-                }
-                .controlSize(.small)
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
-    }
-
     private var accessibilityBanner: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "hand.raised.fill")
                 .foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 6) {
-                Text("The click and scroll overrides need Accessibility access. They'll start working the moment access is granted.")
+                Text("The click, scroll, and Ctrl + Q overrides need Accessibility access. They'll start working the moment access is granted.")
                     .font(.caption)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Open Accessibility Settings") {

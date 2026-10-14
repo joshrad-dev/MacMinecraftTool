@@ -45,6 +45,9 @@ final class PointerAccelerationManager {
     /// IOFixed encoding of -1.0: acceleration disabled.
     private static let disabledAcceleration = -65_536
     private static let snapshotKey = "pointerAccel.snapshot"
+    /// Persisted while the override is applied, so a run that ends without
+    /// `deactivate()` (crash, force quit) can be cleaned up at next launch.
+    private static let activeKey = "pointerAccel.active"
 
     private var reapplyTimer: Timer?
     private let defaults = UserDefaults.standard
@@ -64,6 +67,7 @@ final class PointerAccelerationManager {
         guard succeeded else { return false }
 
         isActive = true
+        defaults.set(true, forKey: Self.activeKey)
         if reapplyTimer == nil {
             reapplyTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
                 self?.apply()
@@ -78,6 +82,16 @@ final class PointerAccelerationManager {
         guard isActive else { return }
         isActive = false
         restore()
+        defaults.set(false, forKey: Self.activeKey)
+    }
+
+    /// Undo an override left applied by a previous run that never got to
+    /// `deactivate()`. Acceleration is a system-wide setting that outlives the
+    /// process, so without this it would stay disabled after a crash.
+    func restoreIfLeftActive() {
+        guard defaults.bool(forKey: Self.activeKey) else { return }
+        restore()
+        defaults.set(false, forKey: Self.activeKey)
     }
 
     // MARK: - Apply / restore
@@ -164,15 +178,26 @@ final class PointerAccelerationManager {
         body(connect)
     }
 
-    private func copyPointerServices() -> [CFTypeRef] {
+    /// Created once and held for the lifetime of the process. The service
+    /// clients handed out by `IOHIDEventSystemClientCopyServices` stay bound to
+    /// the client that vended them: release it and the next
+    /// `IOHIDServiceClientSetProperty` crashes inside IOKit's termination
+    /// callback (`CFRelease() called with NULL`). LinearMouse likewise keeps
+    /// its client alive in `PointerDeviceManager`.
+    private lazy var eventSystemClient: CFTypeRef? = {
         guard let client = IOHIDEventSystemClientCreate(kCFAllocatorDefault)?.takeRetainedValue() else {
-            return []
+            return nil
         }
         let matches = [
             [kIOHIDDeviceUsagePageKey: kHIDPage_GenericDesktop, kIOHIDDeviceUsageKey: kHIDUsage_GD_Mouse],
             [kIOHIDDeviceUsagePageKey: kHIDPage_GenericDesktop, kIOHIDDeviceUsageKey: kHIDUsage_GD_Pointer]
         ] as CFArray
         IOHIDEventSystemClientSetMatchingMultiple(client, matches)
+        return client
+    }()
+
+    private func copyPointerServices() -> [CFTypeRef] {
+        guard let client = eventSystemClient else { return [] }
         return IOHIDEventSystemClientCopyServices(client)?.takeRetainedValue() as? [CFTypeRef] ?? []
     }
 
